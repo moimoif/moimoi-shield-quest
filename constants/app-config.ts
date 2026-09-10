@@ -7,7 +7,7 @@ import {
 } from '@wallet-ui/react-native-kit'
 
 export class AppConfig {
-  static identity: AppIdentity = { name: 'moimoi-mobile' }
+  static identity: AppIdentity = { name: 'Moimoi Shield Quest' }
   static networks: SolanaCluster[] = [
     createSolanaDevnet({ url: 'https://api.devnet.solana.com' }),
     createSolanaLocalnet({ url: 'http://localhost:8899' }),

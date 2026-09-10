@@ -1,21 +1,23 @@
 import { StyleSheet } from 'react-native'
+import { colors, spacing } from '@/constants/theme'
 
 export const appStyles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderColor: '#d1d1d1',
-    borderRadius: 2,
+    backgroundColor: '#F4F7FB',
+    borderColor: colors.cardBorder,
+    borderRadius: 16,
     borderWidth: 1,
     elevation: 1,
-    padding: 4,
+    padding: spacing.sm,
   },
   screen: {
+    backgroundColor: colors.background,
     flex: 1,
-    gap: 16,
-    paddingHorizontal: 8,
+    gap: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
   stack: {
-    gap: 8,
+    gap: spacing.sm,
   },
   textDanger: {
     color: '#b3261e',
@@ -24,6 +26,7 @@ export const appStyles = StyleSheet.create({
     color: '#1b6b30',
   },
   title: {
+    color: colors.text,
     fontSize: 20,
     fontWeight: 'bold',
   },

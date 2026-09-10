@@ -38,7 +38,18 @@ snap() {
 hasg()      { grep -q -- "$1" "$SNAP"; }
 in_wallet() { $ADB shell dumpsys activity activities 2>/dev/null \
                 | grep -oE 'topResumedActivity=[^}]*' | grep -q "$FW/"; }
-app_front() { $ADB shell am start -n "$APP/.MainActivity" >/dev/null 2>&1; sleep 2; }
+open_wallet_tab() {
+  snap
+  hasg 'text="Wallet Lab"' && return 0
+  tap 'text="Wallet"' >/dev/null 2>&1 || true
+  sleep 1
+}
+
+app_front() {
+  $ADB shell am start -n "$APP/.MainActivity" >/dev/null 2>&1
+  sleep 2
+  open_wallet_tab
+}
 
 rn_err()    { grep -oE 'text="[^"]*(Uncaught|Unhandled)[^"]*"' "$SNAP" | head -1; }
 rn_err_id() { grep -oE 'Uncaught \(in promise, id: [0-9]+' "$SNAP" | grep -oE '[0-9]+$' | tail -1; }
