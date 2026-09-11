@@ -1,4 +1,13 @@
 import { colors, radii, spacing } from '@/constants/theme'
+import {
+  getStampRank,
+  pointsForCorrectAnswer,
+  questModeOrder,
+  questModes,
+  stampRankDetails,
+  type QuestModeId,
+  type StampRank,
+} from '@/features/shield-quest/game-config'
 import { recordQuestResult, type StampPassport } from '@/features/shield-quest/passport-storage'
 import { SafetyVerdict, shuffledQuestions } from '@/features/shield-quest/questions'
 import { ShieldBackground } from '@/features/shield-quest/shield-background'
@@ -17,31 +26,32 @@ import Animated, {
 } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const QUEST_DURATION_SECONDS = 60
-const REQUIRED_CORRECT_ANSWERS = 6
-const ANSWER_DELAY_MS = 950
-
 type GamePhase = 'ready' | 'playing' | 'result'
 
 type GameResult = {
   answered: number
   bestStreak: number
   correct: number
+  mode: QuestModeId
   passport: StampPassport
+  points: number
+  rank: StampRank
   success: boolean
 }
 
 export function ShieldQuestScreen() {
   const router = useRouter()
   const [phase, setPhase] = useState<GamePhase>('ready')
-  const [questions, setQuestions] = useState(shuffledQuestions)
+  const [selectedMode, setSelectedMode] = useState<QuestModeId>('guardian')
+  const mode = questModes[selectedMode]
+  const [questions, setQuestions] = useState(() => shuffledQuestions(1, 2))
   const [questionIndex, setQuestionIndex] = useState(0)
+  const [points, setPoints] = useState(0)
   const [correctAnswers, setCorrectAnswers] = useState(0)
   const [currentStreak, setCurrentStreak] = useState(0)
-  const [bestStreak, setBestStreak] = useState(0)
   const [answered, setAnswered] = useState(0)
-  const [timeRemaining, setTimeRemaining] = useState(QUEST_DURATION_SECONDS)
-  const [feedback, setFeedback] = useState<{ correct: boolean; clue: string } | null>(null)
+  const [timeRemaining, setTimeRemaining] = useState(questModes.guardian.durationSeconds)
+  const [feedback, setFeedback] = useState<{ correct: boolean; clue: string; points: number } | null>(null)
   const [result, setResult] = useState<GameResult | null>(null)
   const [savingResult, setSavingResult] = useState(false)
 
@@ -52,6 +62,7 @@ export function ShieldQuestScreen() {
   const streakRef = useRef(0)
   const bestStreakRef = useRef(0)
   const answeredRef = useRef(0)
+  const pointsRef = useRef(0)
   const cardScale = useSharedValue(1)
   const feedbackOpacity = useSharedValue(0)
 
@@ -70,7 +81,9 @@ export function ShieldQuestScreen() {
 
     runningRef.current = false
     answerLockedRef.current = true
-    const success = correctRef.current >= REQUIRED_CORRECT_ANSWERS
+    const success = correctRef.current >= mode.requiredCorrectAnswers
+    const accuracy = answeredRef.current > 0 ? Math.round((correctRef.current / answeredRef.current) * 100) : 0
+    const rank = getStampRank(selectedMode, accuracy)
     setSavingResult(true)
     setPhase('result')
 
@@ -84,6 +97,9 @@ export function ShieldQuestScreen() {
       success,
       correctAnswers: correctRef.current,
       bestStreak: bestStreakRef.current,
+      mode: selectedMode,
+      points: pointsRef.current,
+      rank,
     })
 
     setResult({
@@ -91,10 +107,13 @@ export function ShieldQuestScreen() {
       correct: correctRef.current,
       bestStreak: bestStreakRef.current,
       answered: answeredRef.current,
+      mode: selectedMode,
       passport,
+      points: pointsRef.current,
+      rank,
     })
     setSavingResult(false)
-  }, [])
+  }, [mode.requiredCorrectAnswers, selectedMode])
 
   useEffect(() => {
     if (phase !== 'playing') {
@@ -129,13 +148,13 @@ export function ShieldQuestScreen() {
       clearTimeout(answerTimeoutRef.current)
     }
 
-    setQuestions(shuffledQuestions())
+    setQuestions(shuffledQuestions(mode.minQuestionDifficulty, mode.maxQuestionDifficulty))
     setQuestionIndex(0)
+    setPoints(0)
     setCorrectAnswers(0)
     setCurrentStreak(0)
-    setBestStreak(0)
     setAnswered(0)
-    setTimeRemaining(QUEST_DURATION_SECONDS)
+    setTimeRemaining(mode.durationSeconds)
     setFeedback(null)
     setResult(null)
     setSavingResult(false)
@@ -143,6 +162,7 @@ export function ShieldQuestScreen() {
     streakRef.current = 0
     bestStreakRef.current = 0
     answeredRef.current = 0
+    pointsRef.current = 0
     answerLockedRef.current = false
     runningRef.current = true
     feedbackOpacity.set(0)
@@ -167,20 +187,23 @@ export function ShieldQuestScreen() {
       const nextCorrect = correctRef.current + 1
       const nextStreak = streakRef.current + 1
       const nextBestStreak = Math.max(bestStreakRef.current, nextStreak)
+      const earnedPoints = pointsForCorrectAnswer(nextStreak, mode.multiplier)
       correctRef.current = nextCorrect
       streakRef.current = nextStreak
       bestStreakRef.current = nextBestStreak
+      pointsRef.current += earnedPoints
       setCorrectAnswers(nextCorrect)
       setCurrentStreak(nextStreak)
-      setBestStreak(nextBestStreak)
+      setPoints(pointsRef.current)
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      setFeedback({ correct: true, clue: question.clue, points: earnedPoints })
     } else {
       streakRef.current = 0
       setCurrentStreak(0)
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      setFeedback({ correct: false, clue: question.clue, points: 0 })
     }
 
-    setFeedback({ correct: isCorrect, clue: question.clue })
     cardScale.set(withSequence(withTiming(0.985, { duration: 90 }), withSpring(1)))
     feedbackOpacity.set(0)
     feedbackOpacity.set(withTiming(1, { duration: 180 }))
@@ -193,14 +216,19 @@ export function ShieldQuestScreen() {
       setQuestionIndex((current) => current + 1)
       setFeedback(null)
       answerLockedRef.current = false
-    }, ANSWER_DELAY_MS)
+    }, mode.answerDelayMs)
   }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <ShieldBackground />
       {phase === 'ready' ? (
-        <ReadyView onBack={() => router.back()} onStart={startGame} />
+        <ReadyView
+          onBack={() => router.back()}
+          onSelectMode={setSelectedMode}
+          onStart={startGame}
+          selectedMode={selectedMode}
+        />
       ) : phase === 'playing' ? (
         <ScrollView contentContainerStyle={styles.playContent}>
           <View style={styles.headerRow}>
@@ -208,8 +236,8 @@ export function ShieldQuestScreen() {
               <Text style={styles.backButtonText}>‹</Text>
             </Pressable>
             <View style={styles.headerTitleWrap}>
-              <Text style={styles.eyebrow}>SHIELD QUEST</Text>
-              <Text style={styles.headerTitle}>安全判断</Text>
+              <Text style={[styles.eyebrow, { color: mode.accent }]}>{mode.label} MODE</Text>
+              <Text style={styles.headerTitle}>Shield Challenge</Text>
             </View>
             <View style={[styles.timerPill, timeRemaining <= 10 && styles.timerPillDanger]}>
               <Text style={[styles.timerText, timeRemaining <= 10 && styles.timerTextDanger]}>{timeRemaining}</Text>
@@ -218,13 +246,22 @@ export function ShieldQuestScreen() {
           </View>
 
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${(timeRemaining / QUEST_DURATION_SECONDS) * 100}%` }]} />
+            <View
+              style={[
+                styles.progressFill,
+                { backgroundColor: mode.accent, width: `${(timeRemaining / mode.durationSeconds) * 100}%` },
+              ]}
+            />
           </View>
 
           <View style={styles.scoreRow}>
-            <ScoreStat label="正解" value={`${correctAnswers}`} accent={colors.emerald} />
-            <ScoreStat label="連続" value={`${currentStreak}`} accent={colors.purple} />
-            <ScoreStat label="最高連続" value={`${bestStreak}`} accent={colors.blue} />
+            <ScoreStat label="POINTS" value={`${points}`} accent={mode.accent} />
+            <ScoreStat
+              label="CLEAR"
+              value={`${correctAnswers}/${mode.requiredCorrectAnswers}`}
+              accent={colors.emerald}
+            />
+            <ScoreStat label="COMBO" value={`×${currentStreak}`} accent={colors.purple} />
           </View>
 
           <Animated.View style={[styles.questionCard, cardAnimatedStyle]}>
@@ -239,7 +276,7 @@ export function ShieldQuestScreen() {
               {feedback ? (
                 <View style={[styles.feedbackBox, feedback.correct ? styles.correctBox : styles.wrongBox]}>
                   <Text style={[styles.feedbackTitle, feedback.correct ? styles.correctText : styles.wrongText]}>
-                    {feedback.correct ? '✓ 正解' : '× 要注意'}
+                    {feedback.correct ? `✓ 正解  +${feedback.points} PT` : '× 要注意  COMBO RESET'}
                   </Text>
                   <Text style={styles.feedbackClue}>{feedback.clue}</Text>
                 </View>
@@ -282,7 +319,19 @@ export function ShieldQuestScreen() {
   )
 }
 
-function ReadyView({ onBack, onStart }: { onBack: () => void; onStart: () => void }) {
+function ReadyView({
+  onBack,
+  onSelectMode,
+  onStart,
+  selectedMode,
+}: {
+  onBack: () => void
+  onSelectMode: (mode: QuestModeId) => void
+  onStart: () => void
+  selectedMode: QuestModeId
+}) {
+  const mode = questModes[selectedMode]
+
   return (
     <ScrollView contentContainerStyle={styles.centerContent}>
       <Pressable accessibilityRole="button" onPress={onBack} style={[styles.backButton, styles.readyBack]}>
@@ -294,20 +343,36 @@ function ReadyView({ onBack, onStart }: { onBack: () => void; onStart: () => voi
         </View>
       </Animated.View>
       <Animated.View entering={FadeIn.delay(150).duration(450)} style={styles.readyTextWrap}>
-        <Text style={styles.eyebrow}>PHASE 2 · SAFETY TRAINING</Text>
-        <Text style={styles.readyTitle}>60秒で守る力を。</Text>
+        <Text style={styles.eyebrow}>PHASE 3 · GAME UPGRADE</Text>
+        <Text style={styles.readyTitle}>守る力を、次のランクへ。</Text>
         <Text style={styles.readySubtitle}>
-          表示される場面が安全ならSAFE、危険ならDANGER。{REQUIRED_CORRECT_ANSWERS}問正解でShield Stampを獲得できます。
+          難易度を選び、SAFE／DANGERを判断。連続正解のCOMBOで高得点と上位Stampを目指そう。
         </Text>
       </Animated.View>
-      <View style={styles.rulesCard}>
-        <Rule number="60" label="秒のチャレンジ" />
-        <View style={styles.ruleDivider} />
-        <Rule number={`${REQUIRED_CORRECT_ANSWERS}`} label="問正解でクリア" />
-        <View style={styles.ruleDivider} />
-        <Rule number="1" label="Shield Stamp" />
+      <View style={styles.modeList}>
+        {questModeOrder.map((modeId) => (
+          <ModeButton
+            key={modeId}
+            modeId={modeId}
+            onPress={() => onSelectMode(modeId)}
+            selected={modeId === selectedMode}
+          />
+        ))}
       </View>
-      <Pressable accessibilityRole="button" onPress={onStart} style={styles.startButton}>
+      <Text style={styles.modeDescription}>{mode.description}</Text>
+      <View style={styles.rulesCard}>
+        <Rule number={`${mode.durationSeconds}`} label="秒のチャレンジ" />
+        <View style={styles.ruleDivider} />
+        <Rule number={`${mode.requiredCorrectAnswers}`} label="問正解でクリア" />
+        <View style={styles.ruleDivider} />
+        <Rule number={`×${mode.multiplier}`} label="ポイント倍率" />
+      </View>
+      <Pressable
+        accessibilityLabel={`${mode.label}モードを開始`}
+        accessibilityRole="button"
+        onPress={onStart}
+        style={[styles.startButton, { backgroundColor: mode.accent, shadowColor: mode.accent }]}
+      >
         <Text style={styles.startButtonText}>QUEST START</Text>
         <Text style={styles.startArrow}>→</Text>
       </Pressable>
@@ -339,6 +404,8 @@ function ResultView({
   }
 
   const accuracy = result.answered > 0 ? Math.round((result.correct / result.answered) * 100) : 0
+  const resultMode = questModes[result.mode]
+  const rank = stampRankDetails[result.rank]
 
   return (
     <ScrollView contentContainerStyle={styles.resultContent}>
@@ -348,27 +415,31 @@ function ResultView({
       >
         <Text style={styles.resultOrbIcon}>{result.success ? '◇' : '△'}</Text>
       </Animated.View>
-      <Text style={styles.eyebrow}>{result.success ? 'QUEST COMPLETE' : 'TRAINING COMPLETE'}</Text>
+      <Text style={[styles.eyebrow, { color: resultMode.accent }]}>
+        {result.success ? `${rank.label} RANK CLEAR` : `${resultMode.label} TRAINING COMPLETE`}
+      </Text>
       <Text style={styles.resultTitle}>{result.success ? 'Shield Stamp 獲得！' : 'あと少しでクリア！'}</Text>
       <Text style={styles.resultSubtitle}>
         {result.success
-          ? '安全を見抜く力が、新しいスタンプとしてPassportに記録されました。'
-          : `${REQUIRED_CORRECT_ANSWERS}問正解を目指して、もう一度チャレンジしましょう。`}
+          ? `${rank.title} StampがPassportに記録されました。次のランクにも挑戦できます。`
+          : `${resultMode.requiredCorrectAnswers}問正解を目指して、COMBOをつなげましょう。`}
       </Text>
       <View style={styles.resultStats}>
-        <ScoreStat label="正解" value={`${result.correct}`} accent={colors.emerald} />
+        <ScoreStat label="POINTS" value={`${result.points}`} accent={resultMode.accent} />
         <ScoreStat label="正答率" value={`${accuracy}%`} accent={colors.blue} />
-        <ScoreStat label="最高連続" value={`${result.bestStreak}`} accent={colors.purple} />
+        <ScoreStat label="MAX COMBO" value={`×${result.bestStreak}`} accent={colors.purple} />
       </View>
       {result.success ? (
         <View style={styles.stampPreview}>
-          <View style={styles.stampSeal}>
-            <Text style={styles.stampSealIcon}>◇</Text>
+          <View style={[styles.stampSeal, { borderColor: rank.color, shadowColor: rank.color }]}>
+            <Text style={[styles.stampSealIcon, { color: rank.color }]}>◇</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.stampLabel}>SHIELD STAMP</Text>
-            <Text style={styles.stampName}>Safety Guardian</Text>
-            <Text style={styles.stampMeta}>STAMP #{String(result.passport.stamps.length).padStart(2, '0')}</Text>
+            <Text style={[styles.stampLabel, { color: rank.color }]}>{rank.label} SHIELD STAMP</Text>
+            <Text style={styles.stampName}>{rank.title}</Text>
+            <Text style={styles.stampMeta}>
+              {resultMode.label} · STAMP #{String(result.passport.stamps.length).padStart(2, '0')}
+            </Text>
           </View>
         </View>
       ) : null}
@@ -417,6 +488,28 @@ function AnswerButton({
       </View>
       <Text style={[styles.answerLabel, { color }]}>{label}</Text>
       <Text style={styles.answerSubtitle}>{subtitle}</Text>
+    </Pressable>
+  )
+}
+
+function ModeButton({ modeId, onPress, selected }: { modeId: QuestModeId; onPress: () => void; selected: boolean }) {
+  const mode = questModes[modeId]
+
+  return (
+    <Pressable
+      accessibilityLabel={`${mode.label} ${mode.shortLabel}`}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.modeButton,
+        selected && { backgroundColor: `${mode.accent}18`, borderColor: mode.accent },
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={[styles.modeLabel, { color: mode.accent }]}>{mode.label}</Text>
+      <Text style={styles.modeShortLabel}>{mode.shortLabel}</Text>
+      <Text style={styles.modeMultiplier}>POINT ×{mode.multiplier}</Text>
     </Pressable>
   )
 }
@@ -526,6 +619,48 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 15,
     lineHeight: 24,
+    textAlign: 'center',
+  },
+  modeList: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    maxWidth: 560,
+  },
+  modeButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(12, 26, 46, 0.76)',
+    borderColor: 'rgba(169, 184, 204, 0.18)',
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 82,
+    paddingHorizontal: 4,
+    paddingVertical: spacing.xs,
+  },
+  modeLabel: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  modeShortLabel: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 3,
+  },
+  modeMultiplier: {
+    color: colors.textMuted,
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginTop: 4,
+  },
+  modeDescription: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: -spacing.sm,
     textAlign: 'center',
   },
   rulesCard: {

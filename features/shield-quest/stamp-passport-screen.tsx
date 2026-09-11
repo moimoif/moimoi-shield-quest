@@ -1,4 +1,5 @@
 import { colors, radii, spacing } from '@/constants/theme'
+import { questModes, stampRankDetails } from '@/features/shield-quest/game-config'
 import {
   emptyPassport,
   getPlayStreak,
@@ -59,12 +60,12 @@ export function StampPassportScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.passportLabel}>SHIELD PASSPORT</Text>
               <Text style={styles.passportName}>Safety Explorer</Text>
-              <Text style={styles.passportId}>LOCAL DEVICE · PHASE 2</Text>
+              <Text style={styles.passportId}>LOCAL DEVICE · PHASE 3</Text>
             </View>
           </View>
           <View style={styles.statsRow}>
             <PassportStat label="STAMPS" value={`${passport.stamps.length}`} color={colors.emerald} />
-            <PassportStat label="BEST SCORE" value={`${passport.bestScore}`} color={colors.blue} />
+            <PassportStat label="BEST POINTS" value={`${passport.bestPoints}`} color={colors.blue} />
             <PassportStat label="DAY STREAK" value={`${getPlayStreak(passport)}`} color={colors.purple} />
           </View>
         </Animated.View>
@@ -90,7 +91,9 @@ export function StampPassportScreen() {
               <Text style={styles.emptySealText}>◇</Text>
             </View>
             <Text style={styles.emptyTitle}>最初のStampを獲得しよう</Text>
-            <Text style={styles.emptyText}>60秒のShield Questで6問正解すると、ここに安全学習の記録が残ります。</Text>
+            <Text style={styles.emptyText}>
+              難易度を選び、目標数を正解すると、ここにランク付きの安全学習記録が残ります。
+            </Text>
           </View>
         )}
 
@@ -105,19 +108,24 @@ export function StampPassportScreen() {
 }
 
 function StampCard({ index, stamp }: { index: number; stamp: ShieldStamp }) {
+  const rank = stampRankDetails[stamp.rank]
+  const mode = questModes[stamp.mode]
+
   return (
-    <View style={styles.stampCard}>
-      <View style={styles.stampSeal}>
-        <View style={styles.stampSealInner}>
-          <Text style={styles.stampIcon}>◇</Text>
+    <View style={[styles.stampCard, { borderColor: `${rank.color}66` }]}>
+      <View style={[styles.stampSeal, { borderColor: `${rank.color}70` }]}>
+        <View style={[styles.stampSealInner, { borderColor: rank.color }]}>
+          <Text style={[styles.stampIcon, { color: rank.color }]}>◇</Text>
         </View>
       </View>
+      <Text style={[styles.stampRank, { color: rank.color }]}>{rank.label}</Text>
       <Text style={styles.stampNumber}>STAMP #{String(index).padStart(2, '0')}</Text>
-      <Text style={styles.stampName}>Safety Guardian</Text>
+      <Text style={styles.stampName}>{rank.title}</Text>
       <Text style={styles.stampDate}>{formatStampDate(stamp.earnedAt)}</Text>
       <View style={styles.stampResultRow}>
-        <Text style={styles.stampResult}>正解 {stamp.correctAnswers}</Text>
-        <Text style={styles.stampResult}>連続 {stamp.bestStreak}</Text>
+        <Text style={styles.stampResult}>{mode.label}</Text>
+        <Text style={styles.stampResult}>{stamp.points} PT</Text>
+        <Text style={styles.stampResult}>×{stamp.bestStreak}</Text>
       </View>
     </View>
   )
@@ -334,10 +342,15 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-45deg' }],
   },
   stampNumber: {
-    color: colors.emerald,
+    color: colors.textMuted,
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 1.1,
+  },
+  stampRank: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.4,
   },
   stampName: {
     color: colors.text,

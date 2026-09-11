@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { isQuestModeId, isStampRank, type QuestModeId, type StampRank } from '@/features/shield-quest/game-config'
 
 const PASSPORT_STORAGE_KEY = '@moimoi/shield-passport/v1'
 
@@ -7,11 +8,15 @@ export type ShieldStamp = {
   correctAnswers: number
   earnedAt: string
   id: string
+  mode: QuestModeId
+  points: number
+  rank: StampRank
 }
 
 export type StampPassport = {
   bestScore: number
   bestStreak: number
+  bestPoints: number
   lastPlayedAt: string | null
   playCount: number
   stamps: ShieldStamp[]
@@ -21,6 +26,9 @@ export type StampPassport = {
 export type QuestResult = {
   bestStreak: number
   correctAnswers: number
+  mode: QuestModeId
+  points: number
+  rank: StampRank
   success: boolean
 }
 
@@ -29,22 +37,35 @@ export const emptyPassport: StampPassport = {
   stamps: [],
   bestScore: 0,
   bestStreak: 0,
+  bestPoints: 0,
   playCount: 0,
   lastPlayedAt: null,
 }
 
-function isShieldStamp(value: unknown): value is ShieldStamp {
+function parseShieldStamp(value: unknown): ShieldStamp | null {
   if (!value || typeof value !== 'object') {
-    return false
+    return null
   }
 
   const stamp = value as Partial<ShieldStamp>
-  return (
-    typeof stamp.id === 'string' &&
-    typeof stamp.earnedAt === 'string' &&
-    typeof stamp.correctAnswers === 'number' &&
-    typeof stamp.bestStreak === 'number'
-  )
+  if (
+    typeof stamp.id !== 'string' ||
+    typeof stamp.earnedAt !== 'string' ||
+    typeof stamp.correctAnswers !== 'number' ||
+    typeof stamp.bestStreak !== 'number'
+  ) {
+    return null
+  }
+
+  return {
+    id: stamp.id,
+    earnedAt: stamp.earnedAt,
+    correctAnswers: stamp.correctAnswers,
+    bestStreak: stamp.bestStreak,
+    mode: isQuestModeId(stamp.mode) ? stamp.mode : 'guardian',
+    points: typeof stamp.points === 'number' ? stamp.points : stamp.correctAnswers * 100,
+    rank: isStampRank(stamp.rank) ? stamp.rank : 'silver',
+  }
 }
 
 function parsePassport(value: string | null): StampPassport {
@@ -58,11 +79,15 @@ function parsePassport(value: string | null): StampPassport {
       return emptyPassport
     }
 
+    const stamps = parsed.stamps.map(parseShieldStamp).filter((stamp): stamp is ShieldStamp => stamp !== null)
+
     return {
       version: 1,
-      stamps: parsed.stamps.filter(isShieldStamp),
+      stamps,
       bestScore: typeof parsed.bestScore === 'number' ? parsed.bestScore : 0,
       bestStreak: typeof parsed.bestStreak === 'number' ? parsed.bestStreak : 0,
+      bestPoints:
+        typeof parsed.bestPoints === 'number' ? parsed.bestPoints : Math.max(0, ...stamps.map((stamp) => stamp.points)),
       playCount: typeof parsed.playCount === 'number' ? parsed.playCount : 0,
       lastPlayedAt: typeof parsed.lastPlayedAt === 'string' ? parsed.lastPlayedAt : null,
     }
@@ -88,6 +113,9 @@ export async function recordQuestResult(result: QuestResult): Promise<StampPassp
         earnedAt: now,
         correctAnswers: result.correctAnswers,
         bestStreak: result.bestStreak,
+        mode: result.mode,
+        points: result.points,
+        rank: result.rank,
       }
     : null
 
@@ -96,6 +124,7 @@ export async function recordQuestResult(result: QuestResult): Promise<StampPassp
     stamps: stamp ? [stamp, ...passport.stamps] : passport.stamps,
     bestScore: Math.max(passport.bestScore, result.correctAnswers),
     bestStreak: Math.max(passport.bestStreak, result.bestStreak),
+    bestPoints: Math.max(passport.bestPoints, result.points),
     playCount: passport.playCount + 1,
     lastPlayedAt: now,
   }

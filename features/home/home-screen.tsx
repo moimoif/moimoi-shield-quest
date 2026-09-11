@@ -64,7 +64,7 @@ export function HomeScreen() {
           <Text style={theme.label}>連続プレイ</Text>
           <Text style={[theme.title, { marginTop: spacing.xs }]}>{getPlayStreak(passport)} 日</Text>
           <Text style={theme.bodyMuted}>
-            Shield Stamp {passport.stamps.length}個 · ベストスコア {passport.bestScore}
+            Shield Stamp {passport.stamps.length}個 · ベスト {passport.bestPoints} PT
           </Text>
         </View>
 
