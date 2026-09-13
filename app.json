@@ -46,8 +46,16 @@
           }
         }
       ],
-      "expo-web-browser"
-    ],
+            "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "QRコードの内容を読み取り、注意点を表示するためにカメラを使用します。",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ]
+           ],
     "experiments": {
       "reactCompiler": true,
       "typedRoutes": true

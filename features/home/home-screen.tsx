@@ -76,7 +76,7 @@ export function HomeScreen() {
             status={completedToday ? '完了' : '挑戦可能'}
             done={completedToday}
           />
-          <MissionRow title="QR を確認する" status="準備中" done={false} />
+          <MissionRow title="QR を確認する" status="確認可能" done={false} />
         </View>
 
         <View style={theme.card} accessibilityLabel="Wallet status">
@@ -113,12 +113,12 @@ export function HomeScreen() {
             <Text style={theme.secondaryButtonText}>Stamp Passport を見る</Text>
           </Pressable>
           <Pressable
+            accessibilityLabel="Open QR safety check"
             accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            style={theme.disabledButton}
+            onPress={() => router.push('/qr-check')}
+            style={theme.secondaryButton}
           >
-            <Text style={theme.disabledButtonText}>QR を確認（準備中）</Text>
+            <Text style={theme.secondaryButtonText}>QR の内容を確認</Text>
           </Pressable>
         </View>
       </ScrollView>

@@ -8,6 +8,7 @@ export default function RootLayout() {
     <AppProviders>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="qr-check" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="light" />
     </AppProviders>
