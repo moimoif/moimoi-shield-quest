@@ -76,7 +76,12 @@ export function HomeScreen() {
             status={completedToday ? '完了' : '挑戦可能'}
             done={completedToday}
           />
-          <MissionRow title="QR を確認する" status="確認可能" done={false} />
+          <MissionRow
+            title="QR を確認する"
+            status="確認可能"
+            done={false}
+            onPress={() => router.push('/qr-check')}
+          />
         </View>
 
         <View style={theme.card} accessibilityLabel="Wallet status">
@@ -126,20 +131,45 @@ export function HomeScreen() {
   )
 }
 
-function MissionRow({ title, status, done }: { title: string; status: string; done: boolean }) {
-  return (
-    <View
-      style={[
-        theme.card,
-        {
-          alignItems: 'center',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-        },
-      ]}
-    >
+function MissionRow({
+  title,
+  status,
+  done,
+  onPress,
+}: {
+  title: string
+  status: string
+  done: boolean
+  onPress?: () => void
+}) {
+  const content = (
+    <>
       <Text style={[theme.body, { flex: 1, paddingRight: spacing.sm }]}>{title}</Text>
       <Text style={done ? theme.textSuccess : theme.bodyMuted}>{status}</Text>
-    </View>
+    </>
   )
+
+  const rowStyle = [
+    theme.card,
+    {
+      alignItems: 'center' as const,
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+    },
+  ]
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityHint="QR安全確認画面を開きます"
+        accessibilityRole="button"
+        onPress={onPress}
+        style={({ pressed }) => [rowStyle, pressed && { opacity: 0.72 }]}
+      >
+        {content}
+      </Pressable>
+    )
+  }
+
+  return <View style={rowStyle}>{content}</View>
 }
