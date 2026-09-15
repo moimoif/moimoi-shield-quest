@@ -1,3 +1,4 @@
+import { useLanguage } from '@/features/language/language-provider'
 import { colors, minTapSize, radii, spacing, theme } from '@/constants/theme'
 import { analyseQrContent } from '@/features/qr-check/qr-analysis'
 import { ShieldBackground } from '@/features/shield-quest/shield-background'
@@ -8,13 +9,14 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export function QrCheckScreen() {
+  const { language, t } = useLanguage()
   const router = useRouter()
   const [permission, requestPermission] = useCameraPermissions()
   const [scanning, setScanning] = useState(false)
   const [rawContent, setRawContent] = useState<string | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const scanLockedRef = useRef(true)
-  const analysis = rawContent === null ? null : analyseQrContent(rawContent)
+  const analysis = rawContent === null ? null : analyseQrContent(rawContent, language)
 
   function beginScanning() {
     scanLockedRef.current = false
@@ -56,7 +58,7 @@ export function QrCheckScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Pressable
-            accessibilityLabel="ホームに戻る"
+            accessibilityLabel={t('ホームに戻る')}
             accessibilityRole="button"
             onPress={() => router.back()}
             style={styles.backButton}
@@ -65,32 +67,34 @@ export function QrCheckScreen() {
           </Pressable>
           <View style={styles.headerText}>
             <Text style={styles.eyebrow}>QR SAFETY CHECK</Text>
-            <Text style={styles.title}>QR内容の確認</Text>
+            <Text style={styles.title}>{t('QR内容の確認')}</Text>
           </View>
           <View style={styles.headerSpacer} />
         </View>
 
         <View style={styles.noticeCard}>
-          <Text style={styles.noticeTitle}>確認できるのは、QRに含まれる文字列です</Text>
+          <Text style={styles.noticeTitle}>{t('確認できるのは、QRに含まれる文字列です')}</Text>
           <Text style={styles.noticeText}>
-            教育目的の説明であり、安全性を保証するものではありません。リンクを開く・署名する・送金する処理は行いません。
+            {t(
+              '教育目的の説明であり、安全性を保証するものではありません。リンクを開く・署名する・送金する処理は行いません。',
+            )}
           </Text>
         </View>
 
         {!permission ? (
           <View style={theme.card}>
-            <Text style={theme.bodyMuted}>カメラ権限を確認しています…</Text>
+            <Text style={theme.bodyMuted}>{t('カメラ権限を確認しています…')}</Text>
           </View>
         ) : !permission.granted ? (
           <View style={theme.card}>
-            <Text style={styles.sectionTitle}>カメラの許可</Text>
-            <Text style={theme.bodyMuted}>QRコードを端末内で読み取る場合のみ、カメラを使用します。</Text>
+            <Text style={styles.sectionTitle}>{t('カメラの許可')}</Text>
+            <Text style={theme.bodyMuted}>{t('QRコードを端末内で読み取る場合のみ、カメラを使用します。')}</Text>
             <Pressable
               accessibilityRole="button"
               onPress={() => void handleRequestPermission()}
               style={styles.primaryButton}
             >
-              <Text style={styles.primaryButtonText}>カメラの使用を許可する</Text>
+              <Text style={styles.primaryButtonText}>{t('カメラの使用を許可する')}</Text>
             </Pressable>
           </View>
         ) : scanning ? (
@@ -108,20 +112,20 @@ export function QrCheckScreen() {
               />
               <View pointerEvents="none" style={styles.scanGuide} />
             </View>
-            <Text style={styles.cameraHelp}>枠内にQRコードを合わせてください</Text>
+            <Text style={styles.cameraHelp}>{t('枠内にQRコードを合わせてください')}</Text>
             <Pressable accessibilityRole="button" onPress={stopScanning} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>読取りを中止</Text>
+              <Text style={styles.secondaryButtonText}>{t('読取りを中止')}</Text>
             </Pressable>
           </View>
         ) : (
           <Pressable accessibilityRole="button" onPress={beginScanning} style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>{rawContent === null ? 'QRを読み取る' : '別のQRを読み取る'}</Text>
+            <Text style={styles.primaryButtonText}>{t(rawContent === null ? 'QRを読み取る' : '別のQRを読み取る')}</Text>
           </Pressable>
         )}
 
         {cameraError ? (
           <View accessibilityRole="alert" style={styles.errorCard}>
-            <Text style={styles.errorText}>{cameraError}</Text>
+            <Text style={styles.errorText}>{t(cameraError)}</Text>
           </View>
         ) : null}
 
@@ -129,9 +133,9 @@ export function QrCheckScreen() {
           <>
             <View style={theme.card}>
               <Text style={styles.sectionLabel}>DECODED CONTENT</Text>
-              <Text style={styles.sectionTitle}>読み取った原文</Text>
+              <Text style={styles.sectionTitle}>{t('読み取った原文')}</Text>
               <Text selectable style={styles.rawText}>
-                {rawContent || '（空の文字列）'}
+                {rawContent || t('（空の文字列）')}
               </Text>
             </View>
 
@@ -152,7 +156,7 @@ export function QrCheckScreen() {
 
             <View style={styles.educationCard}>
               <Text style={styles.sectionLabel}>CHECK POINTS</Text>
-              <Text style={styles.sectionTitle}>確認するポイント</Text>
+              <Text style={styles.sectionTitle}>{t('確認するポイント')}</Text>
               {analysis.notes.map((note, index) => (
                 <View key={`${index}-${note}`} style={styles.noteRow}>
                   <Text style={styles.noteNumber}>{index + 1}</Text>
@@ -162,7 +166,7 @@ export function QrCheckScreen() {
             </View>
 
             <Text style={styles.footerNote}>
-              読取り結果は履歴保存せず、この画面から外部へ送信しません。QR内の表示名や説明文も未検証です。
+              {t('読取り結果は履歴保存せず、この画面から外部へ送信しません。QR内の表示名や説明文も未検証です。')}
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -172,7 +176,7 @@ export function QrCheckScreen() {
               }}
               style={styles.secondaryButton}
             >
-              <Text style={styles.secondaryButtonText}>結果を消す</Text>
+              <Text style={styles.secondaryButtonText}>{t('結果を消す')}</Text>
             </Pressable>
           </>
         ) : null}

@@ -1,3 +1,4 @@
+import { useLanguage } from '@/features/language/language-provider'
 import { ellipsify } from '@/utils/ellipsify'
 import { useNetwork } from '@/features/network/use-network'
 import {
@@ -15,6 +16,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export function HomeScreen() {
+  const { language, t } = useLanguage()
   const router = useRouter()
   const { account } = useMobileWallet()
   const { selectedNetwork } = useNetwork()
@@ -40,6 +42,14 @@ export function HomeScreen() {
   return (
     <SafeAreaView style={theme.screen} edges={['top']}>
       <ScrollView contentContainerStyle={theme.screenPad} accessibilityRole="none">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={language === 'en' ? 'Language settings' : '言語設定'}
+          onPress={() => router.push('/settings')}
+          style={theme.secondaryButton}
+        >
+          <Text style={theme.secondaryButtonText}>日本語 / English</Text>
+        </Pressable>
         <View style={{ alignItems: 'center', gap: spacing.sm, paddingTop: spacing.md }}>
           <View
             accessibilityLabel="Moimoi shield"
@@ -57,28 +67,33 @@ export function HomeScreen() {
             <Text style={{ color: colors.emerald, fontSize: 36, fontWeight: '800' }}>MQ</Text>
           </View>
           <Text style={theme.title}>Moimoi Shield Quest</Text>
-          <Text style={[theme.subtitle, { textAlign: 'center' }]}>Solana の安全確認を、毎日のミッションとして。</Text>
+          <Text style={[theme.subtitle, { textAlign: 'center' }]}>
+            {t('Solana の安全確認を、毎日のミッションとして。')}
+          </Text>
         </View>
 
         <View style={theme.card} accessibilityLabel="Play streak">
-          <Text style={theme.label}>連続プレイ</Text>
-          <Text style={[theme.title, { marginTop: spacing.xs }]}>{getPlayStreak(passport)} 日</Text>
+          <Text style={theme.label}>{t('連続プレイ')}</Text>
+          <Text style={[theme.title, { marginTop: spacing.xs }]}>
+            {getPlayStreak(passport)} {language === 'en' ? 'days' : '日'}
+          </Text>
           <Text style={theme.bodyMuted}>
-            Shield Stamp {passport.stamps.length}個 · ベスト {passport.bestPoints} PT
+            {language === 'en' ? 'Shield Stamps' : 'Shield Stamp'} {passport.stamps.length}
+            {language === 'en' ? '' : '個'} · {language === 'en' ? 'Best' : 'ベスト'} {passport.bestPoints} PT
           </Text>
         </View>
 
         <View style={theme.stack}>
-          <Text style={theme.label}>今日のミッション</Text>
-          <MissionRow title="ウォレットを接続する" status={connected ? '完了' : '未完了'} done={connected} />
+          <Text style={theme.label}>{t('今日のミッション')}</Text>
+          <MissionRow title={t('ウォレットを接続する')} status={t(connected ? '完了' : '未完了')} done={connected} />
           <MissionRow
-            title="Shield Game をクリアする"
-            status={completedToday ? '完了' : '挑戦可能'}
+            title={t('Shield Game をクリアする')}
+            status={t(completedToday ? '完了' : '挑戦可能')}
             done={completedToday}
           />
           <MissionRow
-            title="QR を確認する"
-            status="確認可能"
+            title={t('QR を確認する')}
+            status={t('確認可能')}
             done={false}
             onPress={() => router.push('/qr-check')}
           />
@@ -87,7 +102,7 @@ export function HomeScreen() {
         <View style={theme.card} accessibilityLabel="Wallet status">
           <Text style={theme.label}>Wallet</Text>
           <Text style={[theme.body, { marginTop: spacing.xs }]}>
-            {connected ? `${account.label ?? 'Wallet'} · ${ellipsify(account.address.toString(), 4)}` : '未接続'}
+            {connected ? `${account.label ?? 'Wallet'} · ${ellipsify(account.address.toString(), 4)}` : t('未接続')}
           </Text>
           <Text style={theme.bodyMuted}>{selectedNetwork.label}</Text>
         </View>
@@ -99,7 +114,7 @@ export function HomeScreen() {
             onPress={() => router.navigate('/wallet')}
             style={theme.primaryButton}
           >
-            <Text style={theme.primaryButtonText}>Wallet Lab を開く</Text>
+            <Text style={theme.primaryButtonText}>{t('Wallet Lab を開く')}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -107,7 +122,7 @@ export function HomeScreen() {
             onPress={() => router.push('/shield')}
             style={theme.secondaryButton}
           >
-            <Text style={theme.secondaryButtonText}>今日の Shield に挑戦</Text>
+            <Text style={theme.secondaryButtonText}>{t('今日の Shield に挑戦')}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -115,7 +130,7 @@ export function HomeScreen() {
             onPress={() => router.push('/passport')}
             style={theme.secondaryButton}
           >
-            <Text style={theme.secondaryButtonText}>Stamp Passport を見る</Text>
+            <Text style={theme.secondaryButtonText}>{t('Stamp Passport を見る')}</Text>
           </Pressable>
           <Pressable
             accessibilityLabel="Open QR safety check"
@@ -123,7 +138,7 @@ export function HomeScreen() {
             onPress={() => router.push('/qr-check')}
             style={theme.secondaryButton}
           >
-            <Text style={theme.secondaryButtonText}>QR の内容を確認</Text>
+            <Text style={theme.secondaryButtonText}>{t('QR の内容を確認')}</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -142,6 +157,7 @@ function MissionRow({
   done: boolean
   onPress?: () => void
 }) {
+  const { t } = useLanguage()
   const content = (
     <>
       <Text style={[theme.body, { flex: 1, paddingRight: spacing.sm }]}>{title}</Text>
@@ -161,7 +177,7 @@ function MissionRow({
   if (onPress) {
     return (
       <Pressable
-        accessibilityHint="QR安全確認画面を開きます"
+        accessibilityHint={t('QR安全確認画面を開きます')}
         accessibilityRole="button"
         onPress={onPress}
         style={({ pressed }) => [rowStyle, pressed && { opacity: 0.72 }]}
