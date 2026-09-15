@@ -5,6 +5,41 @@ export function isAppLanguage(value: unknown): value is AppLanguage {
 }
 
 const english: Record<string, string> = {
+  秒: 'sec',
+  安全: 'Safe',
+  危険: 'Danger',
+  'SAFE 安全': 'SAFE: Safe',
+  'DANGER 危険': 'DANGER: Danger',
+  'この状況は安全？危険？': 'Is this situation safe or dangerous?',
+  '実際の送金やMainnet接続は行わない教育用ゲームです。':
+    'Educational game only. No real transfers or Mainnet connections.',
+  '守る力を、次のランクへ。': 'Take your safety skills to the next rank.',
+  '難易度を選び、SAFE／DANGERを判断。連続正解のCOMBOで高得点と上位Stampを目指そう。':
+    'Choose a difficulty and judge SAFE or DANGER. Build a combo of correct answers to earn more points and higher-ranked stamps.',
+  秒のチャレンジ: 'seconds per challenge',
+  問正解でクリア: 'correct answers to clear',
+  ポイント倍率: 'point multiplier',
+  '学習専用 · 実資金・送金・Mainnetは使用しません': 'Learning only · No real funds, transfers or Mainnet',
+  '記録しています…': 'Saving your result…',
+  'Shield Stamp 獲得！': 'Shield Stamp earned!',
+  'あと少しでクリア！': 'Keep training for a clear!',
+  正答率: 'ACCURACY',
+  'Stamp Passportを見る': 'View Stamp Passport',
+  もう一度挑戦: 'Try again',
+  Homeへ戻る: 'Back to Home',
+  入門: 'Beginner',
+  標準: 'Standard',
+  上級: 'Advanced',
+  基本的な詐欺サインをゆっくり確認: 'Review basic scam warning signs at a relaxed pace.',
+  基本と実践を組み合わせた標準訓練: 'Standard training combining basic and practical situations.',
+  判断の難しい実践ケースに挑戦: 'Take on challenging practical scenarios.',
+  'Passportを読み込み中…': 'Loading Passport…',
+  最初のStampを獲得しよう: 'Earn your first stamp',
+  '難易度を選び、目標数を正解すると、ここにランク付きの安全学習記録が残ります。':
+    'Choose a difficulty and reach the correct-answer target to add a ranked safety-learning record here.',
+  'Shield Questに挑戦': 'Play Shield Quest',
+  '記録はAsyncStorageを使い、この端末内だけに保存されます。':
+    'Records are stored with AsyncStorage on this device only.',
   'Solana の安全確認を、毎日のミッションとして。': 'Make Solana safety checks a daily mission.',
   連続プレイ: 'Play streak',
   今日のミッション: 'Today’s missions',

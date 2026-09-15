@@ -58,8 +58,8 @@ export default function SettingsScreen() {
         ) : null}
         <Text style={[theme.bodyMuted, { marginTop: spacing.md }]}>
           {en
-            ? 'Home and QR checks support both languages. Game questions are currently in Japanese. Wallet apps and system permission dialogs use their own language settings.'
-            : 'ホームとQR確認は2言語対応です。ゲームの問題文は現在日本語です。ウォレットアプリや端末の許可画面は、それぞれの言語設定に従います。'}
+            ? 'Home, QR checks, Shield Quest and Stamp Passport support both languages. Wallet apps and system permission dialogs use their own language settings.'
+            : 'ホーム・QR確認・Shield Quest・Stamp Passportは2言語対応です。ウォレットアプリや端末の許可画面は、それぞれの言語設定に従います。'}
         </Text>
       </ScrollView>
     </SafeAreaView>

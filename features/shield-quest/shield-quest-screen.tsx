@@ -1,3 +1,5 @@
+import { useLanguage } from '@/features/language/language-provider'
+import { localizeQuestion } from '@/features/shield-quest/question-language'
 import { colors, radii, spacing } from '@/constants/theme'
 import {
   getStampRank,
@@ -40,6 +42,7 @@ type GameResult = {
 }
 
 export function ShieldQuestScreen() {
+  const { language, t } = useLanguage()
   const router = useRouter()
   const [phase, setPhase] = useState<GamePhase>('ready')
   const [selectedMode, setSelectedMode] = useState<QuestModeId>('guardian')
@@ -177,7 +180,7 @@ export function ShieldQuestScreen() {
     }
 
     answerLockedRef.current = true
-    const question = questions[questionIndex % questions.length]
+    const question = localizeQuestion(questions[questionIndex % questions.length], language)
     const isCorrect = question.verdict === verdict
     const nextAnswered = answeredRef.current + 1
     answeredRef.current = nextAnswered
@@ -241,7 +244,7 @@ export function ShieldQuestScreen() {
             </View>
             <View style={[styles.timerPill, timeRemaining <= 10 && styles.timerPillDanger]}>
               <Text style={[styles.timerText, timeRemaining <= 10 && styles.timerTextDanger]}>{timeRemaining}</Text>
-              <Text style={styles.timerUnit}>秒</Text>
+              <Text style={styles.timerUnit}>{t('秒')}</Text>
             </View>
           </View>
 
@@ -266,45 +269,55 @@ export function ShieldQuestScreen() {
 
           <Animated.View style={[styles.questionCard, cardAnimatedStyle]}>
             <View style={styles.categoryPill}>
-              <Text style={styles.categoryText}>{questions[questionIndex % questions.length].category}</Text>
+              <Text style={styles.categoryText}>
+                {localizeQuestion(questions[questionIndex % questions.length], language).category}
+              </Text>
             </View>
             <Text style={styles.questionCount}>QUESTION {answered + 1}</Text>
-            <Text style={styles.questionTitle}>{questions[questionIndex % questions.length].title}</Text>
-            <Text style={styles.scenario}>{questions[questionIndex % questions.length].scenario}</Text>
+            <Text style={styles.questionTitle}>
+              {localizeQuestion(questions[questionIndex % questions.length], language).title}
+            </Text>
+            <Text style={styles.scenario}>
+              {localizeQuestion(questions[questionIndex % questions.length], language).scenario}
+            </Text>
 
             <Animated.View style={[styles.feedbackSlot, feedbackAnimatedStyle]}>
               {feedback ? (
                 <View style={[styles.feedbackBox, feedback.correct ? styles.correctBox : styles.wrongBox]}>
                   <Text style={[styles.feedbackTitle, feedback.correct ? styles.correctText : styles.wrongText]}>
-                    {feedback.correct ? `✓ 正解  +${feedback.points} PT` : '× 要注意  COMBO RESET'}
+                    {feedback.correct
+                      ? `✓ ${language === 'en' ? 'Correct' : '正解'}  +${feedback.points} PT`
+                      : language === 'en'
+                        ? '× Caution  COMBO RESET'
+                        : '× 要注意  COMBO RESET'}
                   </Text>
                   <Text style={styles.feedbackClue}>{feedback.clue}</Text>
                 </View>
               ) : (
-                <Text style={styles.chooseText}>この状況は安全？危険？</Text>
+                <Text style={styles.chooseText}>{t('この状況は安全？危険？')}</Text>
               )}
             </Animated.View>
           </Animated.View>
 
           <View style={styles.answerRow}>
             <AnswerButton
-              accessibilityLabel="SAFE 安全"
+              accessibilityLabel={t('SAFE 安全')}
               color={colors.emerald}
               label="SAFE"
-              subtitle="安全"
+              subtitle={t('安全')}
               symbol="✓"
               onPress={() => answer('safe')}
             />
             <AnswerButton
-              accessibilityLabel="DANGER 危険"
+              accessibilityLabel={t('DANGER 危険')}
               color={colors.danger}
               label="DANGER"
-              subtitle="危険"
+              subtitle={t('危険')}
               symbol="!"
               onPress={() => answer('danger')}
             />
           </View>
-          <Text style={styles.safetyNote}>実際の送金やMainnet接続は行わない教育用ゲームです。</Text>
+          <Text style={styles.safetyNote}>{t('実際の送金やMainnet接続は行わない教育用ゲームです。')}</Text>
         </ScrollView>
       ) : (
         <ResultView
@@ -330,6 +343,7 @@ function ReadyView({
   onStart: () => void
   selectedMode: QuestModeId
 }) {
+  const { language, t } = useLanguage()
   const mode = questModes[selectedMode]
 
   return (
@@ -344,9 +358,9 @@ function ReadyView({
       </Animated.View>
       <Animated.View entering={FadeIn.delay(150).duration(450)} style={styles.readyTextWrap}>
         <Text style={styles.eyebrow}>PHASE 3 · GAME UPGRADE</Text>
-        <Text style={styles.readyTitle}>守る力を、次のランクへ。</Text>
+        <Text style={styles.readyTitle}>{t('守る力を、次のランクへ。')}</Text>
         <Text style={styles.readySubtitle}>
-          難易度を選び、SAFE／DANGERを判断。連続正解のCOMBOで高得点と上位Stampを目指そう。
+          {t('難易度を選び、SAFE／DANGERを判断。連続正解のCOMBOで高得点と上位Stampを目指そう。')}
         </Text>
       </Animated.View>
       <View style={styles.modeList}>
@@ -359,16 +373,16 @@ function ReadyView({
           />
         ))}
       </View>
-      <Text style={styles.modeDescription}>{mode.description}</Text>
+      <Text style={styles.modeDescription}>{t(mode.description)}</Text>
       <View style={styles.rulesCard}>
-        <Rule number={`${mode.durationSeconds}`} label="秒のチャレンジ" />
+        <Rule number={`${mode.durationSeconds}`} label={t('秒のチャレンジ')} />
         <View style={styles.ruleDivider} />
-        <Rule number={`${mode.requiredCorrectAnswers}`} label="問正解でクリア" />
+        <Rule number={`${mode.requiredCorrectAnswers}`} label={t('問正解でクリア')} />
         <View style={styles.ruleDivider} />
-        <Rule number={`×${mode.multiplier}`} label="ポイント倍率" />
+        <Rule number={`×${mode.multiplier}`} label={t('ポイント倍率')} />
       </View>
       <Pressable
-        accessibilityLabel={`${mode.label}モードを開始`}
+        accessibilityLabel={language === 'en' ? `Start ${mode.label} mode` : `${mode.label}モードを開始`}
         accessibilityRole="button"
         onPress={onStart}
         style={[styles.startButton, { backgroundColor: mode.accent, shadowColor: mode.accent }]}
@@ -376,7 +390,7 @@ function ReadyView({
         <Text style={styles.startButtonText}>QUEST START</Text>
         <Text style={styles.startArrow}>→</Text>
       </Pressable>
-      <Text style={styles.safetyNote}>学習専用 · 実資金・送金・Mainnetは使用しません</Text>
+      <Text style={styles.safetyNote}>{t('学習専用 · 実資金・送金・Mainnetは使用しません')}</Text>
     </ScrollView>
   )
 }
@@ -394,11 +408,12 @@ function ResultView({
   result: GameResult | null
   saving: boolean
 }) {
+  const { language, t } = useLanguage()
   if (saving || !result) {
     return (
       <View style={styles.centerContent}>
         <Text style={styles.eyebrow}>SAVING RESULT</Text>
-        <Text style={styles.readyTitle}>記録しています…</Text>
+        <Text style={styles.readyTitle}>{t('記録しています…')}</Text>
       </View>
     )
   }
@@ -418,15 +433,19 @@ function ResultView({
       <Text style={[styles.eyebrow, { color: resultMode.accent }]}>
         {result.success ? `${rank.label} RANK CLEAR` : `${resultMode.label} TRAINING COMPLETE`}
       </Text>
-      <Text style={styles.resultTitle}>{result.success ? 'Shield Stamp 獲得！' : 'あと少しでクリア！'}</Text>
+      <Text style={styles.resultTitle}>{t(result.success ? 'Shield Stamp 獲得！' : 'あと少しでクリア！')}</Text>
       <Text style={styles.resultSubtitle}>
         {result.success
-          ? `${rank.title} StampがPassportに記録されました。次のランクにも挑戦できます。`
-          : `${resultMode.requiredCorrectAnswers}問正解を目指して、COMBOをつなげましょう。`}
+          ? language === 'en'
+            ? `Your ${rank.title} stamp was added to Passport. Try the next rank too.`
+            : `${rank.title} StampがPassportに記録されました。次のランクにも挑戦できます。`
+          : language === 'en'
+            ? `Aim for ${resultMode.requiredCorrectAnswers} correct answers and build your combo.`
+            : `${resultMode.requiredCorrectAnswers}問正解を目指して、COMBOをつなげましょう。`}
       </Text>
       <View style={styles.resultStats}>
         <ScoreStat label="POINTS" value={`${result.points}`} accent={resultMode.accent} />
-        <ScoreStat label="正答率" value={`${accuracy}%`} accent={colors.blue} />
+        <ScoreStat label={t('正答率')} value={`${accuracy}%`} accent={colors.blue} />
         <ScoreStat label="MAX COMBO" value={`×${result.bestStreak}`} accent={colors.purple} />
       </View>
       {result.success ? (
@@ -444,14 +463,14 @@ function ResultView({
         </View>
       ) : null}
       <Pressable accessibilityRole="button" onPress={onPassport} style={styles.startButton}>
-        <Text style={styles.startButtonText}>Stamp Passportを見る</Text>
+        <Text style={styles.startButtonText}>{t('Stamp Passportを見る')}</Text>
         <Text style={styles.startArrow}>→</Text>
       </Pressable>
       <Pressable accessibilityRole="button" onPress={onAgain} style={styles.secondaryAction}>
-        <Text style={styles.secondaryActionText}>もう一度挑戦</Text>
+        <Text style={styles.secondaryActionText}>{t('もう一度挑戦')}</Text>
       </Pressable>
       <Pressable accessibilityRole="button" onPress={onHome} style={styles.textAction}>
-        <Text style={styles.textActionText}>Homeへ戻る</Text>
+        <Text style={styles.textActionText}>{t('Homeへ戻る')}</Text>
       </Pressable>
     </ScrollView>
   )
@@ -493,11 +512,12 @@ function AnswerButton({
 }
 
 function ModeButton({ modeId, onPress, selected }: { modeId: QuestModeId; onPress: () => void; selected: boolean }) {
+  const { t } = useLanguage()
   const mode = questModes[modeId]
 
   return (
     <Pressable
-      accessibilityLabel={`${mode.label} ${mode.shortLabel}`}
+      accessibilityLabel={`${mode.label} ${t(mode.shortLabel)}`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
@@ -508,7 +528,7 @@ function ModeButton({ modeId, onPress, selected }: { modeId: QuestModeId; onPres
       ]}
     >
       <Text style={[styles.modeLabel, { color: mode.accent }]}>{mode.label}</Text>
-      <Text style={styles.modeShortLabel}>{mode.shortLabel}</Text>
+      <Text style={styles.modeShortLabel}>{t(mode.shortLabel)}</Text>
       <Text style={styles.modeMultiplier}>POINT ×{mode.multiplier}</Text>
     </Pressable>
   )

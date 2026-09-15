@@ -1,3 +1,4 @@
+import { useLanguage } from '@/features/language/language-provider'
 import { colors, radii, spacing } from '@/constants/theme'
 import { questModes, stampRankDetails } from '@/features/shield-quest/game-config'
 import {
@@ -15,6 +16,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 export function StampPassportScreen() {
+  const { t } = useLanguage()
   const router = useRouter()
   const [passport, setPassport] = useState<StampPassport>(emptyPassport)
   const [loading, setLoading] = useState(true)
@@ -77,7 +79,7 @@ export function StampPassportScreen() {
 
         {loading ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Passportを読み込み中…</Text>
+            <Text style={styles.emptyTitle}>{t('Passportを読み込み中…')}</Text>
           </View>
         ) : passport.stamps.length > 0 ? (
           <View style={styles.stampGrid}>
@@ -90,24 +92,25 @@ export function StampPassportScreen() {
             <View style={styles.emptySeal}>
               <Text style={styles.emptySealText}>◇</Text>
             </View>
-            <Text style={styles.emptyTitle}>最初のStampを獲得しよう</Text>
+            <Text style={styles.emptyTitle}>{t('最初のStampを獲得しよう')}</Text>
             <Text style={styles.emptyText}>
-              難易度を選び、目標数を正解すると、ここにランク付きの安全学習記録が残ります。
+              {t('難易度を選び、目標数を正解すると、ここにランク付きの安全学習記録が残ります。')}
             </Text>
           </View>
         )}
 
         <Pressable accessibilityRole="button" onPress={() => router.push('/shield')} style={styles.questButton}>
-          <Text style={styles.questButtonText}>Shield Questに挑戦</Text>
+          <Text style={styles.questButtonText}>{t('Shield Questに挑戦')}</Text>
           <Text style={styles.questButtonArrow}>→</Text>
         </Pressable>
-        <Text style={styles.storageNote}>記録はAsyncStorageを使い、この端末内だけに保存されます。</Text>
+        <Text style={styles.storageNote}>{t('記録はAsyncStorageを使い、この端末内だけに保存されます。')}</Text>
       </ScrollView>
     </SafeAreaView>
   )
 }
 
 function StampCard({ index, stamp }: { index: number; stamp: ShieldStamp }) {
+  const { t } = useLanguage()
   const rank = stampRankDetails[stamp.rank]
   const mode = questModes[stamp.mode]
 
@@ -123,7 +126,9 @@ function StampCard({ index, stamp }: { index: number; stamp: ShieldStamp }) {
       <Text style={styles.stampName}>{rank.title}</Text>
       <Text style={styles.stampDate}>{formatStampDate(stamp.earnedAt)}</Text>
       <View style={styles.stampResultRow}>
-        <Text style={styles.stampResult}>{mode.label}</Text>
+        <Text style={styles.stampResult}>
+          {mode.label} · {t(mode.shortLabel)}
+        </Text>
         <Text style={styles.stampResult}>{stamp.points} PT</Text>
         <Text style={styles.stampResult}>×{stamp.bestStreak}</Text>
       </View>
@@ -365,6 +370,7 @@ const styles = StyleSheet.create({
   },
   stampResultRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.xs,
     marginTop: spacing.xs,
   },
