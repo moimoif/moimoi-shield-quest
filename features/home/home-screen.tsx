@@ -1,6 +1,7 @@
 import { useLanguage } from '@/features/language/language-provider'
 import { ellipsify } from '@/utils/ellipsify'
 import { useNetwork } from '@/features/network/use-network'
+import { hasCheckedQrToday } from '@/features/qr-check/qr-check-storage'
 import {
   emptyPassport,
   getPlayStreak,
@@ -21,6 +22,7 @@ export function HomeScreen() {
   const { account } = useMobileWallet()
   const { selectedNetwork } = useNetwork()
   const [passport, setPassport] = useState<StampPassport>(emptyPassport)
+  const [qrCheckedToday, setQrCheckedToday] = useState(false)
   const connected = !!account
   const completedToday = hasStampToday(passport)
 
@@ -30,6 +32,11 @@ export function HomeScreen() {
       void loadPassport().then((storedPassport) => {
         if (active) {
           setPassport(storedPassport)
+        }
+      })
+      void hasCheckedQrToday().then((checked) => {
+        if (active) {
+          setQrCheckedToday(checked)
         }
       })
 
@@ -93,8 +100,8 @@ export function HomeScreen() {
           />
           <MissionRow
             title={t('QR を確認する')}
-            status={t('確認可能')}
-            done={false}
+            status={t(qrCheckedToday ? '完了' : '確認可能')}
+            done={qrCheckedToday}
             onPress={() => router.push('/qr-check')}
           />
         </View>

@@ -1,6 +1,7 @@
 import { useLanguage } from '@/features/language/language-provider'
 import { colors, minTapSize, radii, spacing, theme } from '@/constants/theme'
 import { analyseQrContent } from '@/features/qr-check/qr-analysis'
+import { markQrCheckedToday } from '@/features/qr-check/qr-check-storage'
 import { ShieldBackground } from '@/features/shield-quest/shield-background'
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera'
 import { useRouter } from 'expo-router'
@@ -37,7 +38,9 @@ export function QrCheckScreen() {
 
     scanLockedRef.current = true
     setScanning(false)
-    setRawContent(result.data)
+    void markQrCheckedToday().finally(() => {
+      setRawContent(result.data)
+    })
   }
 
   async function handleRequestPermission() {
