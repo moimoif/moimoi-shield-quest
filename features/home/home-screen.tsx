@@ -9,14 +9,19 @@ import {
   loadPassport,
   type StampPassport,
 } from '@/features/shield-quest/passport-storage'
-import { colors, radii, spacing, theme } from '@/constants/theme'
+import { colors, spacing, theme } from '@/constants/theme'
+import { QuestOpening } from '@/components/quest-opening'
+import { QuestIcon } from '@/components/quest-icon'
 import { useMobileWallet } from '@wallet-ui/react-native-kit'
 import { useFocusEffect, useRouter } from 'expo-router'
 import React, { useCallback, useState } from 'react'
-import { Pressable, ScrollView, Text, View } from 'react-native'
+import { Image, Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+let openingDismissed = false
+
 export function HomeScreen() {
+  const [showOpening, setShowOpening] = useState(!openingDismissed)
   const { language, t } = useLanguage()
   const router = useRouter()
   const { account } = useMobileWallet()
@@ -46,6 +51,17 @@ export function HomeScreen() {
     }, []),
   )
 
+  if (showOpening) {
+    return (
+      <QuestOpening
+        onContinue={() => {
+          openingDismissed = true
+          setShowOpening(false)
+        }}
+      />
+    )
+  }
+
   return (
     <SafeAreaView style={theme.screen} edges={['top']}>
       <ScrollView contentContainerStyle={theme.screenPad} accessibilityRole="none">
@@ -58,21 +74,11 @@ export function HomeScreen() {
           <Text style={theme.secondaryButtonText}>日本語 / English</Text>
         </Pressable>
         <View style={{ alignItems: 'center', gap: spacing.sm, paddingTop: spacing.md }}>
-          <View
+          <Image
+            source={require('@/assets/images/moimoi-shield.png')}
             accessibilityLabel="Moimoi shield"
-            style={{
-              alignItems: 'center',
-              backgroundColor: colors.overlay,
-              borderColor: colors.emerald,
-              borderRadius: radii.pill,
-              borderWidth: 2,
-              height: 88,
-              justifyContent: 'center',
-              width: 88,
-            }}
-          >
-            <Text style={{ color: colors.emerald, fontSize: 36, fontWeight: '800' }}>MQ</Text>
-          </View>
+            style={{ width: 100, height: 100, borderRadius: 24 }}
+          />
           <Text style={theme.title}>Moimoi Shield Quest</Text>
           <Text style={[theme.subtitle, { textAlign: 'center' }]}>
             {t('Solana の安全確認を、毎日のミッションとして。')}
@@ -121,6 +127,7 @@ export function HomeScreen() {
             onPress={() => router.navigate('/wallet')}
             style={theme.primaryButton}
           >
+            <QuestIcon name="wallet" color={colors.background} />
             <Text style={theme.primaryButtonText}>{t('Wallet Lab を開く')}</Text>
           </Pressable>
           <Pressable
@@ -129,6 +136,7 @@ export function HomeScreen() {
             onPress={() => router.push('/shield')}
             style={theme.secondaryButton}
           >
+            <QuestIcon name="stamp" color={colors.emerald} />
             <Text style={theme.secondaryButtonText}>{t('今日の Shield に挑戦')}</Text>
           </Pressable>
           <Pressable
@@ -137,6 +145,7 @@ export function HomeScreen() {
             onPress={() => router.push('/passport')}
             style={theme.secondaryButton}
           >
+            <QuestIcon name="stamp" color={colors.purple} />
             <Text style={theme.secondaryButtonText}>{t('Stamp Passport を見る')}</Text>
           </Pressable>
           <Pressable
@@ -145,6 +154,7 @@ export function HomeScreen() {
             onPress={() => router.push('/qr-check')}
             style={theme.secondaryButton}
           >
+            <QuestIcon name="qr" color={colors.emerald} />
             <Text style={theme.secondaryButtonText}>{t('QR の内容を確認')}</Text>
           </Pressable>
         </View>

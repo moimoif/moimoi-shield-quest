@@ -1,6 +1,7 @@
 import { colors } from '@/constants/theme'
 import { Tabs } from 'expo-router'
 import React from 'react'
+import { QuestIcon } from '@/components/quest-icon'
 
 export default function TabsLayout() {
   return (
@@ -19,8 +20,20 @@ export default function TabsLayout() {
         },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Home' }} />
-      <Tabs.Screen name="wallet" options={{ title: 'Wallet' }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <QuestIcon name="home" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="wallet"
+        options={{
+          title: 'Wallet',
+          tabBarIcon: ({ color, size }) => <QuestIcon name="wallet" color={color} size={size} />,
+        }}
+      />
       <Tabs.Screen name="shield" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="passport" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     </Tabs>
