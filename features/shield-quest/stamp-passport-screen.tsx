@@ -11,7 +11,7 @@ import {
 import { ShieldBackground } from '@/features/shield-quest/shield-background'
 import { useFocusEffect, useRouter } from 'expo-router'
 import React, { useCallback, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -72,7 +72,48 @@ export function StampPassportScreen() {
           </View>
         </Animated.View>
 
-        <View style={styles.sectionHeader}>
+        <View style={styles.badgeSection}>
+        <Text style={styles.badgeTitle}>SHIELD BADGES</Text>
+        <View style={styles.badgeRow}>
+          <View
+            style={[
+              styles.badgeCard,
+              passport.stamps.length < 7 && styles.badgeLocked,
+            ]}>
+            <Image
+              source={require('../../assets/images/badges/moimoi-silver-badge.png')}
+              style={styles.badgeImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.badgeName}>SILVER SHIELD</Text>
+            <Text style={styles.badgeProgress}>
+              {passport.stamps.length >= 7
+                ? 'UNLOCKED'
+                : passport.stamps.length + '/7 STAMPS'}
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.badgeCard,
+              passport.stamps.length < 30 && styles.badgeLocked,
+            ]}>
+            <Image
+              source={require('../../assets/images/badges/moimoi-gold-badge.png')}
+              style={styles.badgeImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.badgeName}>GOLD SHIELD</Text>
+            <Text style={styles.badgeProgress}>
+              {passport.stamps.length >= 30
+                ? 'UNLOCKED'
+                : passport.stamps.length + '/30 STAMPS'}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Shield Stamp Collection</Text>
           <Text style={styles.sectionCount}>{passport.stamps.length} STAMPS</Text>
         </View>
@@ -447,4 +488,51 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: 'center',
   },
+  badgeSection: {
+    marginTop: 24,
+    marginBottom: 20,
+  },
+  badgeTitle: {
+    color: '#63F5C5',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1.8,
+    marginBottom: 12,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  badgeCard: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'rgba(38, 52, 145, 0.45)',
+    borderColor: '#766EFF',
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+  },
+  badgeLocked: {
+    opacity: 0.42,
+  },
+  badgeImage: {
+    width: 112,
+    height: 112,
+  },
+  badgeName: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  badgeProgress: {
+    color: '#63F5C5',
+    fontSize: 11,
+    fontWeight: '800',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+
 })
