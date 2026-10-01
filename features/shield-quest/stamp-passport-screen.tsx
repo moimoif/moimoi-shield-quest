@@ -15,6 +15,13 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+// Individual game ranks are separate from the 7/30-stamp collection badges.
+const stampImages = {
+  silver: require('../../assets/images/badges/moimoi-silver-badge.png'),
+  gold: require('../../assets/images/badges/moimoi-gold-badge.png'),
+  diamond: require('../../assets/images/badges/moimoi-diamond-stamp.png'),
+}
+
 export function StampPassportScreen() {
   const { t } = useLanguage()
   const router = useRouter()
@@ -73,47 +80,35 @@ export function StampPassportScreen() {
         </Animated.View>
 
         <View style={styles.badgeSection}>
-        <Text style={styles.badgeTitle}>SHIELD BADGES</Text>
-        <View style={styles.badgeRow}>
-          <View
-            style={[
-              styles.badgeCard,
-              passport.stamps.length < 7 && styles.badgeLocked,
-            ]}>
-            <Image
-              source={require('../../assets/images/badges/moimoi-silver-badge.png')}
-              style={styles.badgeImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.badgeName}>SILVER SHIELD</Text>
-            <Text style={styles.badgeProgress}>
-              {passport.stamps.length >= 7
-                ? 'UNLOCKED'
-                : passport.stamps.length + '/7 STAMPS'}
-            </Text>
-          </View>
+          <Text style={styles.badgeTitle}>SHIELD BADGES</Text>
+          <View style={styles.badgeRow}>
+            <View style={[styles.badgeCard, passport.stamps.length < 7 && styles.badgeLocked]}>
+              <Image
+                source={require('../../assets/images/badges/moimoi-silver-badge.png')}
+                style={styles.badgeImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.badgeName}>SILVER SHIELD</Text>
+              <Text style={styles.badgeProgress}>
+                {passport.stamps.length >= 7 ? 'UNLOCKED' : passport.stamps.length + '/7 STAMPS'}
+              </Text>
+            </View>
 
-          <View
-            style={[
-              styles.badgeCard,
-              passport.stamps.length < 30 && styles.badgeLocked,
-            ]}>
-            <Image
-              source={require('../../assets/images/badges/moimoi-gold-badge.png')}
-              style={styles.badgeImage}
-              resizeMode="contain"
-            />
-            <Text style={styles.badgeName}>GOLD SHIELD</Text>
-            <Text style={styles.badgeProgress}>
-              {passport.stamps.length >= 30
-                ? 'UNLOCKED'
-                : passport.stamps.length + '/30 STAMPS'}
-            </Text>
+            <View style={[styles.badgeCard, passport.stamps.length < 30 && styles.badgeLocked]}>
+              <Image
+                source={require('../../assets/images/badges/moimoi-gold-badge.png')}
+                style={styles.badgeImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.badgeName}>GOLD SHIELD</Text>
+              <Text style={styles.badgeProgress}>
+                {passport.stamps.length >= 30 ? 'UNLOCKED' : passport.stamps.length + '/30 STAMPS'}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.sectionHeader}>
+        <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Shield Stamp Collection</Text>
           <Text style={styles.sectionCount}>{passport.stamps.length} STAMPS</Text>
         </View>
@@ -157,11 +152,20 @@ function StampCard({ index, stamp }: { index: number; stamp: ShieldStamp }) {
 
   return (
     <View style={[styles.stampCard, { borderColor: `${rank.color}66` }]}>
-      <View style={[styles.stampSeal, { borderColor: `${rank.color}70` }]}>
-        <View style={[styles.stampSealInner, { borderColor: rank.color }]}>
-          <Text style={[styles.stampIcon, { color: rank.color }]}>◇</Text>
+      {stamp.rank !== 'bronze' ? (
+        <Image
+          accessibilityLabel={`${rank.label} ${rank.title}`}
+          source={stampImages[stamp.rank]}
+          style={styles.rankImage}
+          resizeMode="contain"
+        />
+      ) : (
+        <View style={[styles.stampSeal, { borderColor: `${rank.color}70` }]}>
+          <View style={[styles.stampSealInner, { borderColor: rank.color }]}>
+            <Text style={[styles.stampIcon, { color: rank.color }]}>◇</Text>
+          </View>
         </View>
-      </View>
+      )}
       <Text style={[styles.stampRank, { color: rank.color }]}>{rank.label}</Text>
       <Text style={styles.stampNumber}>STAMP #{String(index).padStart(2, '0')}</Text>
       <Text style={styles.stampName}>{rank.title}</Text>
@@ -361,6 +365,11 @@ const styles = StyleSheet.create({
     minWidth: 150,
     padding: spacing.md,
   },
+  rankImage: {
+    width: 88,
+    height: 88,
+    marginBottom: spacing.xs,
+  },
   stampSeal: {
     alignItems: 'center',
     backgroundColor: 'rgba(52, 211, 153, 0.08)',
@@ -534,5 +543,4 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: 'center',
   },
-
 })
